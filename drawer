@@ -1,0 +1,68 @@
+import {Box, Drawer, IconButton, List, ListItem, ListItemButton, ListItemText, ListItemIcon, Toolbar, AppBar } from "@mui/material";
+import { useState } from "react";
+
+import InfoIcon from '@mui/icons-material/Info';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonIcon from '@mui/icons-material/Person';
+import CheckroomIcon from '@mui/icons-material/Checkroom';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import HomeIcon from '@mui/icons-material/Home';
+import ListIcon from '@mui/icons-material/List';
+import { Link, Outlet } from "react-router-dom";
+
+function DrawerMU({vaatteet}) {
+    const [open, setOpen] = useState(false);
+
+    const handleOpen = () => {
+        setOpen(true);
+    }
+    const handleClose = () => {
+        setOpen(false);
+    }
+
+    return (
+        <Box>
+            <AppBar position="static">
+            <Toolbar>
+                <IconButton color='inherit' onClick={handleOpen} style={{padding: 20 }}>
+                    <MenuIcon />
+                </IconButton>
+            </Toolbar>
+            </AppBar>
+            <Drawer anchor='left' open={open} onClose={handleClose} >
+                <List>
+                    <ListItem component={Link} to={'/'} sx={{ color: 'text.primary'}}>
+                        <ListItemButton  /*sx={{'&:hover': {backgroundColor: '#F8E4DB'  // Change background on hover 
+                        }
+                            }}*/>
+                            <ListItemIcon><HomeIcon /></ListItemIcon>
+                            <ListItemText primary='Etusivu' />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem component={Link} to={'listaa'} sx={{ color: 'text.primary'}}>
+                        <ListItemButton>
+                            <ListItemIcon><CheckroomIcon /></ListItemIcon>
+                            <ListItemText primary='Vaatekaappi' />
+                        </ListItemButton>
+                        </ListItem>
+                        <ListItem component={Link} to={'lisaa'} sx={{ color: 'text.primary'}}>
+                        <ListItemButton>
+                            <ListItemIcon><AddIcon /></ListItemIcon>
+                            <ListItemText primary='Lisää' />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem component={Link} to={'ostoslista'} sx={{ color: 'text.primary'}}>
+                        <ListItemButton>
+                            <ListItemIcon><ListIcon /></ListItemIcon>
+                            <ListItemText primary='Ostoslista' />
+                        </ListItemButton>
+                    </ListItem>
+                </List>
+            </Drawer>
+            <Outlet/>
+        </Box>
+    )
+}
+
+export default DrawerMU;
