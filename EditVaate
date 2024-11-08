@@ -1,0 +1,182 @@
+import { useState, useEffect } from "react";
+import { Kategoriat } from './Kategoriat';
+import { Box, TextField, Typography, MenuItem, Button } from '@mui/material';
+import DownloadDoneIcon from '@mui/icons-material/DownloadDone';
+import { updateVaate } from "./vaatteet";
+
+function EditVaate({ vaate, onClose }) {
+    const { vaihtoehdotKoko, vaihtoehdotKategoria, vaihtoehdotStatus } = Kategoriat();
+
+    const [formVaate, setVaate] = useState({
+        nimi: vaate ? vaate.nimi : '',
+        kategoria: vaate ? vaate.kategoria : '',
+        koko: vaate ? vaate.koko : '',
+        status: vaate ? vaate.status : '',
+        ostohinta: vaate ? vaate.ostohinta : '',
+        myyntihinta: vaate ? vaate.myyntihinta : '',
+        kuva: vaate ? vaate.kuva : null 
+    });
+
+    const [viesti, setViesti] = useState('');
+    const [virhe, setVirhe] = useState(false);
+    const [isImageChanged, setIsImageChanged] = useState(false);
+
+    useEffect(() => {
+        if (vaate) {
+            setVaate({
+                nimi: vaate.nimi,
+                kategoria: vaate.kategoria,
+                koko: vaate.koko,
+                status: vaate.status,
+                ostohinta: vaate.ostohinta,
+                myyntihinta: vaate.myyntihinta,
+                kuva: vaate.kuva
+            });
+        }
+    }, [vaate]);
+
+    const muuta = (e) => {
+        const { name, value } = e.target;
+        setVaate(prev => ({
+            ...prev,
+            [name]: (name === 'ostohinta' || name === 'myyntihinta') && value !== '' 
+                ? parseFloat(value) || ''  
+                : value
+        }));
+        setViesti('');
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setVaate(prev => ({
+                ...prev,
+                kuva: file
+            }));
+            setIsImageChanged(true);
+        }
+    };
+
+    const muokkaaVaate = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('id', vaate.id);
+        formData.append('nimi', formVaate.nimi);
+        formData.append('kategoria', formVaate.kategoria);
+        formData.append('koko', formVaate.koko);
+        formData.append('status', formVaate.status);
+        formData.append('ostohinta', formVaate.ostohinta);
+        formData.append('myyntihinta', formVaate.myyntihinta);
+        if (isImageChanged) {
+            formData.append('kuva', formVaate.kuva); // Lisää uusi kuva vain jos se on valittu
+        } else {
+            formData.append('kuva', vaate.kuva); // Muuten käytä vanhaa kuvaa
+        }
+        
+        try {
+            await updateVaate(formData);
+            setViesti('Muokattiin onnistuneesti');
+            setVirhe(false);
+            onClose();
+        } catch (error) {
+            console.error('Error updating item:', error);
+            setViesti('Muokkaus ei onnistunut');
+            setVirhe(true);
+        }
+    };
+
+    return (
+        <Box component="form" autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+                name="nimi"
+                label="Nimi"
+                value={formVaate.nimi}
+                onChange={muuta}
+                required
+            />
+            <TextField
+                select
+                name="kategoria"
+                label="Kategoria"
+                value={formVaate.kategoria}
+                onChange={muuta}
+                required
+            >
+                {vaihtoehdotKategoria.map(option => (
+                    <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                    </MenuItem>
+                ))}
+            </TextField>
+            <TextField
+                select
+                name="koko"
+                label="Koko"
+                value={formVaate.koko}
+                onChange={muuta}
+                required
+            >
+                {vaihtoehdotKoko.map(option => (
+                    <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                    </MenuItem>
+                ))}
+            </TextField>
+            <TextField
+                select
+                name="status"
+                label="Status"
+                value={formVaate.status}
+                onChange={muuta}
+                required
+            >
+                {vaihtoehdotStatus.map(option => (
+                    <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                    </MenuItem>
+                ))}
+            </TextField>
+            <TextField
+                name="ostohinta"
+                label="Ostohinta"
+                type="number"
+                value={formVaate.ostohinta || ''}
+                onChange={muuta}
+            />
+            <TextField
+                name="myyntihinta"
+                label="Myyntihinta"
+                type="number"
+                value={formVaate.myyntihinta || ''}
+                onChange={muuta}
+            />
+            {formVaate.kuva && !isImageChanged && (
+                <Box sx={{ textAlign: 'center', mb: 2 }}>
+                    <img
+                        src={`/download/${formVaate.kuva}`}
+                        alt="Current"
+                        style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                    />
+                </Box>
+            )}
+            <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+            />
+            <Button
+                type="submit"
+                variant="outlined"
+                endIcon={<DownloadDoneIcon />}
+                onClick={muokkaaVaate}
+            >
+                Tallenna
+            </Button>
+            <Button variant="outlined" onClick={onClose}>Peruuta</Button>
+            {virhe && <Typography color="error">{viesti}</Typography>}
+            {!virhe && <Typography color="primary">{viesti}</Typography>}
+        </Box>
+    );
+}
+
+export default EditVaate;
