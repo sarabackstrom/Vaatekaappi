@@ -1,0 +1,214 @@
+import { useState } from "react";
+import { Kategoriat } from './Kategoriat';
+import { Box, Input, InputLabel, TextField, Typography, MenuItem, Button, Paper } from '@mui/material';
+import DownloadDoneIcon from '@mui/icons-material/DownloadDone';
+import AttachmentIcon from '@mui/icons-material/Attachment';
+AttachmentIcon
+import { addVaate } from "./vaatteet";
+
+function Vaatelomake() {
+
+  const { vaihtoehdotKoko, vaihtoehdotKategoria, vaihtoehdotStatus } = Kategoriat();
+
+  const [vaate, setVaate] = useState({
+    nimi: '',
+    kategoria: '',
+    koko: '',
+    status: '',
+    ostohinta: null,
+    myyntihinta: null,
+    kuva: []
+  });
+
+  const [viesti, setViesti] = useState('');
+  const [virhe, setVirhe] = useState(false);
+
+
+  const muuta = (e) => {
+    const { name, value } = e.target;
+
+    // Muutetaan ensimmäinen kirjain isoksi, jos kyseessä on "nimi" kenttä
+    const updatedValue = 
+        name === 'nimi' ? value.charAt(0).toUpperCase() + value.slice(1) :
+        (name === 'ostohinta' || name === 'myyntihinta') && value !== '' ? parseFloat(value) : value;
+
+    setVaate({
+        ...vaate,
+        [name]: updatedValue
+    });
+    setViesti('');
+};
+
+
+  const muutaKuva = (e) => {
+    setVaate({
+      ...vaate,
+      [e.target.name]: e.target.files[0]
+    });
+    setViesti('');
+  }
+
+  let kuvaNimi = '';
+  if (vaate.kuva !== null) {
+    kuvaNimi = vaate.kuva.name;
+  }
+
+  const lisaaVaate = async (e) => {
+    e.preventDefault();
+
+    // Tarkistetaan, että pakolliset kentät ovat täytettynä
+    if (!vaate.nimi || !vaate.kategoria || !vaate.koko || !vaate.status) {
+        setViesti('Täytä kaikki vaaditut kentät');
+        setVirhe(true);
+        return; // Lopetetaan funktio tähän
+    }
+
+    const formData = new FormData();
+    formData.append('nimi', vaate.nimi);
+    formData.append('kategoria', vaate.kategoria);
+    formData.append('koko', vaate.koko);
+    formData.append('status', vaate.status);
+    formData.append('ostohinta', vaate.ostohinta);
+    formData.append('myyntihinta', vaate.myyntihinta);
+    formData.append('kuva', vaate.kuva);
+
+    try {
+        await addVaate(formData);
+        setVaate({
+            nimi: '',
+            kategoria: '',
+            koko: '',
+            status: '',
+            ostohinta: null,
+            myyntihinta: null,
+            kuva: []
+        });
+        setViesti('Vaate lisätty vaatekaappiin');
+        setVirhe(false);
+    } catch (error) {
+        console.error('Lisäys epäonnistui:', error);
+        setViesti('Lisäys ei onnistunut');
+        setVirhe(true);
+    }
+};
+
+
+  return (
+    <Box sx={{ paddingLeft: 5, paddingTop: 5, maxWidth: 500 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+                Lisää vaate
+            </Typography>
+            <Typography variant="body1" paragraph>
+                Tällä sivulla voit lisätä vaatteen vaatekaappiisi tai ostoslistalle.
+            </Typography>
+    
+    <Paper
+      component="form"
+      autoComplete="off"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        padding: 3,
+        backgroundColor: 'white',
+        borderRadius: 2,
+        boxShadow: 3,
+        marginTop: 2
+      }}
+    >
+
+      <TextField
+        required
+        id="nimi"
+        label="Vaatteen nimi"
+        name="nimi"
+        value={vaate.nimi}
+        onChange={muuta}
+      />
+      <TextField
+        id="koko"
+        required
+        select
+        label="Koko"
+        variant="outlined"
+        value={vaate.koko}
+        name="koko"
+        onChange={muuta}
+      > {vaihtoehdotKoko.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+
+      </TextField>
+      <TextField
+        id="status"
+        required
+        select
+        label="Status"
+        variant="outlined"
+        value={vaate.status}
+        name="status"
+        onChange={muuta}
+      >{vaihtoehdotStatus.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+
+      </TextField>
+
+      <TextField
+        id="kategoria"
+        required
+        select
+        label="Kategoria"
+        variant="outlined"
+        value={vaate.kategoria}
+        name="kategoria"
+        onChange={muuta}
+      >{vaihtoehdotKategoria.map((option) => (
+        <MenuItem key={option.value} value={option.value}>
+          {option.label}
+        </MenuItem>
+      ))}
+
+      </TextField>
+
+
+      <TextField
+        id="ostohinta"
+        label="Ostohinta"
+        name="ostohinta"
+        value={vaate.ostohinta}
+        onChange={muuta}
+      />
+
+      <TextField
+        id="myyntihintahinta"
+        label="Myyntihinta"
+        name="myyntihinta"
+        value={vaate.myyntihinta}
+        onChange={muuta}
+      />
+
+      <Input accept='image/*' name='kuva' type='file' id='kuva'
+        onChange={muutaKuva} style={{ display: 'none' }} />
+
+      <InputLabel htmlFor='kuva'>
+        <Typography display='inline'>Kuva</Typography>
+        <Button component='span' startIcon={<AttachmentIcon />} />
+        <Typography display='inline'>{kuvaNimi}</Typography>
+      </InputLabel>
+
+      <Button variant="outlined" endIcon={<DownloadDoneIcon />} onClick={lisaaVaate}>
+        Lisää
+      </Button>
+      <p>{viesti}</p>
+    </Paper>
+    </Box>
+
+  )
+}
+
+export default Vaatelomake
