@@ -1,0 +1,115 @@
+import { Box, Grid2, Typography, Button, IconButton, Tooltip } from "@mui/material";
+import Pie from "./Pie";
+import Galleria from "./Galleria";
+import Bar from "./Bar";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import InfoIcon from '@mui/icons-material/Info';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import AddIcon from '@mui/icons-material/Add';
+
+function Etusivu() {
+    // Tilamuuttuja, joka hallitsee boxin näkyvyyttä
+    const [isBoxVisible, setIsBoxVisible] = useState(false);
+
+    // Funktio boxin näyttämiseksi tai piilottamiseksi
+    const toggleBoxVisibility = () => {
+        setIsBoxVisible(!isBoxVisible);
+    };
+
+    return (
+        <Box sx={{ padding: 5 }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+                Tervetuloa digitaaliseen vaatekaappiisi!
+            </Typography>
+            <Typography variant="h6" sx={{ paddingBottom: 5, paddingTop: 3 }}>
+                Tämä sovellus on tehty helpottamaan lapsiperheiden arkea ja kausivaatteiden hankintaa.
+            </Typography>
+
+            <Box sx={{ padding: 3 }}>
+                {/* Row for aligned titles */}
+
+                {/* Main content row for Bar, Pie, and Galleria */}
+                <Grid2 container spacing={2}>
+                    {/* Left Side: Bar and Pie (larger size) */}
+                    <Grid2 item xs={12} md={6}>
+                        <Box sx={{ marginBottom: 5 }}>
+                            <Typography variant="h5" sx={{ paddingBottom: 2 }}>
+                                Vaatekaapin arvo:
+                            </Typography>
+
+                            {/* Box that can be toggled */}
+                            <InfoIcon onClick={toggleBoxVisibility} fontSize="large" />
+
+                            {/* Jos isBoxVisible on true, näytetään box */}
+                            {isBoxVisible && (
+                                <Box
+                                    sx={{
+                                        backgroundColor: "white",
+                                        width: 700,
+                                        marginTop: 3,
+                                        padding: 3,            // Lisää padding
+                                        borderRadius: 2,       // Pyöristää reunat
+                                        boxShadow: 2,           // Lisää varjo, jotta laatikko erottuu paremmin
+                                    }}
+                                >
+                                    <Typography variant="body1" sx={{ paddingBottom: 2 }}>
+                                        Arvo nyt = Kaikkien paitsi myytyjen vaatteiden arvo.
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ paddingBottom: 2 }}>
+                                        Arvo alltime = Rahaa mennyt vaatteisiin kokonaisuudessaan (sisältää myös myydyt).
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ paddingBottom: 2 }}>
+                                        Myynti = Myydyistä vaatteista saatu summa.
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ paddingBottom: 2 }}>
+                                        Kokonaisuus = Myynti - Arvo alltime, Kertoo paljon rahaa on mennyt vaatteisiin, kun myydyt on otettu huomioon.
+                                    </Typography>
+                                </Box>
+
+                            )}
+
+                            <Bar /> {/* Bar chart component */}
+                        </Box>
+                        <Typography variant="h5" sx={{ paddingBottom: 2 }}>
+                            Vaatekaapin sisältö lukuina:
+                        </Typography>
+
+                        <Pie /> {/* Pie chart component */}
+                    </Grid2>
+
+                    {/* Right Side: Galleria (smaller size) */}
+                    <Grid2 item xs={12} md={6}>
+                        <Box>
+                            <Typography variant="h5" sx={{ paddingBottom: 2 }}>
+                                Vaatekaapin sisältö kuvina:
+                            </Typography>
+                           { /*<Button variant="outlined" endIcon={<SendIcon />} color="inherit" component={Link} to="/listaa">
+                                Muokkaa, poista ja katso tarkemmin sisältöä
+                            </Button>*/}
+                            <Tooltip title="Muokkaa, poista ja katso tarkemmin sisältöä" >
+                                <IconButton component={Link} to="/listaa">
+                                    <FormatListBulletedIcon fontSize="large" color="inherit"/>
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Lisää vaate">
+                                <IconButton component={Link} to="/lisaa">
+                                    <AddIcon fontSize="large" color="inherit"/>
+                                </IconButton>
+                            </Tooltip>
+                            <Galleria /> {/* Gallery component */}
+
+                        </Box>
+                    </Grid2>
+                </Grid2>
+            </Box>
+        </Box>
+    );
+}
+
+export default Etusivu;
+
+
+
+
+
