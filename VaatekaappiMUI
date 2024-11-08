@@ -1,0 +1,200 @@
+import { useState, useEffect } from 'react';
+import { Box, Button, IconButton, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Paper, Modal } from '@mui/material';
+import { deleteVaatteet, getVaatteet } from './vaatteet';
+import { Kategoriat } from './Kategoriat';
+import Vaatelomake from './Vaatelomake'; // Import your Vaatelomake component
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditVaate from './EditVaate';
+import { Avatar } from '@mui/material';
+
+export default function VaatekaappiMUI() {
+  const [vaatteet, setVaatteet] = useState([]);
+  const [koko, setKoko] = useState('');
+  const [kategoria, setKategoria] = useState('');
+  const [status, setStatus] = useState('');
+  const [hakutulokset, setHakutulokset] = useState([]);
+  const [haku, setHaku] = useState(false);
+  const { vaihtoehdotKoko, vaihtoehdotKategoria, vaihtoehdotStatus } = Kategoriat();
+
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedVaate, setSelectedVaate] = useState(null);
+
+  // Fetch data when the component mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await getVaatteet();
+        setVaatteet(result.data);
+      } catch (error) {
+        console.error('Virhe tietojen hakemisessa:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const muutaKoko = (e) => setKoko(e.target.value);
+  const muutaKategoria = (e) => setKategoria(e.target.value);
+  const muutaStatus = (e) => setStatus(e.target.value);
+
+  const haeVaatteita = () => {
+    const tulokset = vaatteet.filter(vaate =>
+      (koko === '' || vaate.koko === koko) &&
+      (kategoria === '' || vaate.kategoria === kategoria) &&
+      (status === '' || vaate.status === status)
+    );
+    setHakutulokset(tulokset);
+    setHaku(true);
+  };
+
+  const nollaa = () => {
+    setHakutulokset(vaatteet);
+    setHaku(false);
+    setKoko('');
+    setStatus('');
+    setKategoria('');
+  }
+
+  const poistaVaate = async (id) => {
+    try {
+      await deleteVaatteet(id);
+      setVaatteet(prevVaatteet => prevVaatteet.filter(vaate => vaate.id !== id));
+      if (haku) {
+        setHakutulokset(prevHakutulokset => prevHakutulokset.filter(vaate => vaate.id !== id));
+      }
+    } catch (error) {
+      console.error('Poisto epäonnistui:', error);
+    }
+  };
+
+  const handleOpen = (vaate) => {
+    setSelectedVaate(vaate);
+    setOpenModal(true);
+  };
+
+  const handleClose = () => {
+    setSelectedVaate(null);
+    setOpenModal(false);
+  };
+
+  const fetchVaatteet = async () => {
+    try {
+      const result = await getVaatteet();
+      setVaatteet(result.data);
+      setHakutulokset(result.data);
+    } catch (error) {
+      console.error('Virhe tietojen hakemisessa:', error);
+    }
+  };
+
+  return (
+    <Box sx={{ padding: 5 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+                Vaatekaappi
+            </Typography>
+            <Typography variant="body1" paragraph>
+                Tässä on vaatekaappisi. Voit selata, rajata ja muokata sen sisältöä tällä sivulla.
+            </Typography>
+      <Box sx={{ display: 'flex', gap: 2, marginBottom: 2 }}>
+        <TextField
+          id="outlined-basic"
+          select
+          label="Koko"
+          variant="outlined"
+          value={koko}
+          onChange={muutaKoko}
+          sx={{ width: 200 }}
+        >
+          {vaihtoehdotKoko.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          id="outlined-basic"
+          select
+          label="Status"
+          variant="outlined"
+          value={status}
+          onChange={muutaStatus}
+          sx={{ width: 200 }}
+        >
+          {vaihtoehdotStatus.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
+          id="outlined-basic"
+          select
+          label="Kategoria"
+          variant="outlined"
+          value={kategoria}
+          onChange={muutaKategoria}
+          sx={{ width: 200 }}
+          
+        >
+          {vaihtoehdotKategoria.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Box>
+      <Box sx={{ display: 'flex', gap: 2, marginBottom: 4 }}>
+        <Button variant="outlined" onClick={haeVaatteita} color='inherit'>Hae</Button>
+        <Button variant="outlined" onClick={nollaa} color='inherit'>Nollaa haku</Button>
+      </Box>
+      <TableContainer component={Paper} sx={{ padding: 5, backgroundColor: "white" }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell align="center">Nimi</TableCell>
+              <TableCell align="center">Kuva</TableCell>
+              <TableCell align="center">Kategoria</TableCell>
+              <TableCell align="center">Koko</TableCell>
+              <TableCell align="center">Status</TableCell>
+              <TableCell align="center">Ostohinta</TableCell>
+              <TableCell align="center">Myyntihinta</TableCell>
+              <TableCell align="center">Toiminnot</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(haku ? hakutulokset : vaatteet).map((vaate) => (
+              <TableRow key={vaate.id}>
+                <TableCell align="center">{vaate.nimi}</TableCell>
+                <TableCell align="center">
+                <Avatar alt={vaate.nimi} src={'http://localhost:8080/download/' + vaate.kuva} sx={{ width: 40, height: 40 }} />
+                </TableCell>
+                <TableCell align="center">{vaate.kategoria}</TableCell>
+                <TableCell align="center">{vaate.koko}</TableCell>
+                <TableCell align="center">{vaate.status}</TableCell>
+                <TableCell align="center">{vaate.ostohinta}</TableCell>
+                <TableCell align="center">{vaate.myyntihinta}</TableCell>
+                <TableCell align="center">
+                  <IconButton color="inherit" onClick={() => handleOpen(vaate)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton color="inherit" onClick={() => poistaVaate(vaate.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Modal open={openModal} onClose={handleClose}>
+        <Box sx={{ padding: 2, bgcolor: 'background.paper', borderRadius: 2, width: 300, margin: 'auto', marginTop: '15%' }}>
+        <EditVaate vaate={selectedVaate} onClose={() => { handleClose(); fetchVaatteet(); }} />
+        </Box>
+      </Modal>
+    </Box>
+  );
+}
